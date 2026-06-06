@@ -277,8 +277,7 @@
 
     <div class="calendar-container">
         <div class="calendar-header" id="calendar-header">
-            <!-- JSで動的に生成されます -->
-        </div>
+            </div>
         <div class="calendar-grid" id="calendar-grid">
             </div>
     </div>
@@ -462,32 +461,30 @@
             totalDisplayElement.innerText = `納税は${displayCount}個です`;
         }
 
-        
         // ① 量産型コミット税の検知メッセージと税額の反映
         const commitKey = Object.keys(breakdown).find(key => key.includes("量産型コミット税"));
         if (commitKey) {
-            // 表の左側のテキストも「① 量産型コミット税 (今日 X個の草を検知)」にアップデート！
             document.getElementById('tax-commit-label').innerText = `① ${commitKey}`;
             document.getElementById('tax-commit-value').innerText = `${breakdown[commitKey]}本`;
         } else {
-            document.getElementById('tax-commit-value').innerText = "0.4本";
+            document.getElementById('tax-commit-value').innerText = "0.0本";
         }
 
-        // ② 金曜日お疲れ様税
+        // 🌟 ② 金曜日お疲れ様税（バックエンドに文字を合わせて「金曜日」に修正！）
         if (breakdown["金曜日お疲れ様税"] !== undefined) {
             document.getElementById('tax-friday-value').innerText = `${breakdown["金曜日お疲れ様税"]}本`;
         } else {
             document.getElementById('tax-friday-value').innerText = "0.0本";
         }
 
-        // ③ 休日出勤サボり監視税
+        // 🌟 ③ 休日出勤サボり監視税
         if (breakdown["休日出勤サボり監視税"] !== undefined) {
             document.getElementById('tax-weekend-value').innerText = `${breakdown["休日出勤サボり監視税"]}本`;
         } else {
             document.getElementById('tax-weekend-value').innerText = "0.0本";
         }
 
-        // ④ 不健康不夜城労働税
+        // 🌟 ④ 不健康不夜城労働税
         if (breakdown["不健康不夜城労働税"] !== undefined) {
             document.getElementById('tax-midnight-value').innerText = `${breakdown["不健康不夜城労働税"]}本`;
         } else {
