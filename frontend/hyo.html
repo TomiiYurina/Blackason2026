@@ -38,18 +38,29 @@
     }
 
     .clock-container {
-        background-color: #1A1A1A;
-        color: #FDE11D;
+        background-color: #FFFFFF;
+        color: #3D1C04;
         font-size: 48px;
         font-weight: 900;
         padding: 10px 25px;
         border-radius: 10px;
-        border: 4px solid #E22B22; 
+        border: 4px solid #3D1C04; 
         font-family: 'Courier New', Courier, monospace;
-        text-shadow: 0 0 10px rgba(253, 225, 29, 0.5); 
-        box-shadow: 4px 4px 0px rgba(0,0,0,0.8);
+        box-shadow: 6px 6px 0px #3D1C04;
         transform: rotate(-3deg); 
         position: relative;
+        transition: all 0.3s ease;
+    }
+    .clock-container.night-tax-active {
+        background-color: #E22B22;
+        color: #FDE11D;
+        border-color: #1A1A1A;
+        box-shadow: 0 0 20px rgba(226, 43, 34, 0.8), 6px 6px 0px #1A1A1A;
+        animation: clockPulse 1s infinite alternate;
+    }
+    @keyframes clockPulse {
+        0% { transform: rotate(-3deg) scale(1); }
+        100% { transform: rotate(-1deg) scale(1.05); }
     }
     .clock-container::before {
         content: '⚡';
@@ -77,16 +88,17 @@
     .date-selector {
         display: flex;
         align-items: center;
-        background-color: #31160a;
+        background-color: #FFFFFF;
         padding: 10px 20px;
         border-radius: 15px;
-        border: 3px solid #5e351f;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        border: 4px solid #3D1C04;
+        box-shadow: 6px 6px 0px #3D1C04;
     }
     .date-selector button {
-        background: #4a2311;
-        color: #C5A059;
-        border: 2px solid #1a0a03;
+        background: #FDE11D;
+        color: #3D1C04;
+        border: 3px solid #3D1C04;
+        box-shadow: 2px 2px 0px #3D1C04;
         font-size: 28px;
         cursor: pointer;
         padding: 5px 25px;
@@ -95,14 +107,16 @@
         font-weight: bold;
     }
     .date-selector button:hover {
-        background: #5e351f;
-        transform: scale(1.05);
+        background: #ffe94d;
+        transform: translate(-2px, -2px);
+        box-shadow: 4px 4px 0px #3D1C04;
     }
     .date-selector button:active {
-        transform: scale(0.95);
+        transform: translate(2px, 2px);
+        box-shadow: 0px 0px 0px #3D1C04;
     }
     .date-selector span {
-        color: white;
+        color: #3D1C04;
         font-size: 40px;
         font-weight: bold;
         margin: 0 40px;
@@ -229,13 +243,12 @@
     .tax-message {
         font-size: 32px;
         font-weight: 900;
-        color: white;
-        background-color: #1A1A1A;
+        color: #3D1C04;
+        background-color: #FFFFFF;
         padding: 15px 30px;
         border-radius: 5px;
-        border-left: 10px solid #FDE11D;
-        text-shadow: 2px 2px 0px #000;
-        box-shadow: 4px 4px 0px rgba(0,0,0,0.4);
+        border: 4px solid #3D1C04;
+        box-shadow: 6px 6px 0px #3D1C04;
         letter-spacing: 1px;
     }
 
@@ -243,23 +256,25 @@
         width: 110px;
         height: 110px;
         border-radius: 50%;
-        background: linear-gradient(145deg, #5e351f, #31160a);
-        border: 5px solid #C5A059;
-        color: #C5A059;
+        background: #FDE11D;
+        border: 4px solid #3D1C04;
+        color: #3D1C04;
         font-size: 36px;
-        font-weight: bold;
+        font-weight: 900;
         cursor: pointer;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.8);
-        transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
-        font-family: serif;
+        box-shadow: 6px 6px 0px #3D1C04;
+        transition: transform 0.1s, box-shadow 0.1s;
+        font-family: 'Zen Maru Gothic', sans-serif;
         flex-shrink: 0;
     }
     .ok-btn:hover {
-        background: linear-gradient(145deg, #6e3e24, #3d1c0d);
+        background: #ffe94d;
+        transform: translate(-2px, -2px);
+        box-shadow: 8px 8px 0px #3D1C04;
     }
     .ok-btn:active {
-        transform: translateY(6px);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.9);
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0px #3D1C04;
     }
 
     /* Thunder CAPTCHA 🛡️ */
@@ -510,12 +525,20 @@
 
     // テスト用のスタンプ記録削除ロジックを取り除きました
 
-    // ⏰ リアルタイム時計を動かす関数
     function updateClock() {
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('realtime-clock').innerText = `${hours}:${minutes}`;
+        const clockEl = document.getElementById('realtime-clock');
+        clockEl.innerText = `${hours}:${minutes}`;
+
+        // 🚨 22:00〜05:00の間は「不健康不夜城労働税」警告として時計を赤く脈打たせる
+        const h = now.getHours();
+        if (h >= 22 || h < 5) {
+            clockEl.classList.add('night-tax-active');
+        } else {
+            clockEl.classList.remove('night-tax-active');
+        }
     }
     setInterval(updateClock, 1000);
     updateClock();
