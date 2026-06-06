@@ -131,7 +131,6 @@
         color: #555;
         font-size: 16px;
     }
-    .calendar-header span:first-child { color: #E22B22; }
 
     .calendar-grid {
         display: flex;
@@ -154,7 +153,6 @@
         align-self: flex-start;
         margin-bottom: 8px;
     }
-    .calendar-cell:first-child .cell-date { color: #E22B22; }
 
     /* スタンプ画像 */
     .stamp-img {
@@ -165,6 +163,11 @@
         box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
         transform: rotate(-3deg);
         animation: stampIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .calendar-cell.today {
+        background-color: #fff7d9;
+        border: 2px solid #f4c430;
+        border-radius: 8px;
     }
     @keyframes stampIn {
         0% { transform: scale(0) rotate(-20deg); opacity: 0; }
@@ -273,8 +276,8 @@
     </div>
 
     <div class="calendar-container">
-        <div class="calendar-header">
-            <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+        <div class="calendar-header" id="calendar-header">
+            <!-- JSで動的に生成されます -->
         </div>
         <div class="calendar-grid" id="calendar-grid">
             </div>
@@ -318,13 +321,16 @@
 
         <div class="action-area">
             <div class="tax-message" id="tax-total-display">納税は0個です</div>
-            <button class="ok-btn" onclick="window.location.href='gamen.html'">OK</button>
+            <button class="ok-btn" onclick="handleOkClick()">OK</button>
         </div>
 
     </div>
 </div>
 
 <script>
+    // テスト用に強制的にスタンプ記録を削除（後で元に戻します）
+    localStorage.removeItem('blackthunderTaxStampDate');
+
     // ⏰ リアルタイム時計を動かす関数
     function updateClock() {
         const now = new Date();
@@ -335,55 +341,110 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 🌿 今週のカレンダーを動的に作って、今日の曜日にブラックサンバースタンプ（choco.png）を押す関数
-    function generateCalendar() {
-        const grid = document.getElementById('calendar-grid');
-        grid.innerHTML = '';
-        
-        const now = new Date();
-        const currentDayIdx = now.getDay(); // 0=日, 1=月, ..., 6=土
-        
-        // 今週の日曜日から土曜日までの日付を計算して配置
-        for (let i = 0; i < 7; i++) {
-            const cellDate = new Date(now);
-            cellDate.setDate(now.getDate() - currentDayIdx + i);
-            
-            const cell = document.createElement('div');
-            cell.className = 'calendar-cell';
-            
-            const dateNum = document.createElement('div');
-            dateNum.className = 'cell-date';
-            dateNum.innerText = cellDate.getDate();
-            cell.appendChild(dateNum);
-            
-            // もしループしている曜日が「今日」なら、チョコレートのスタンプをドーンと押す！
-            if (i === currentDayIdx) {
-                const img = document.createElement('img');
-                img.src = 'choco.png'; // チョコレート（ブラックサンダー）の画像
-                img.className = 'stamp-img';
-                img.alt = 'スタンプ';
-                // 画像が見つからなくても崩れないようにエラー処理
-                img.onerror = () => { img.style.display = 'none'; };
-                cell.appendChild(img);
-                cell.style.backgroundColor = '#FFFEE0'; // 今日を目立たせるうっすら黄色
-            }
-            
-            grid.appendChild(cell);
-        }
-        
-        // 日付セレクターの年月を更新 (例: 2026/06)
-        document.getElementById('current-month').innerText = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const STAMP_KEY = 'blackthunderTaxStampDate'
+    let currentWeekStart = getWeekStart(new Date())
+
+    function pad(num) {
+        return String(num).padStart(2, '0')
     }
 
-    // 前の週・次の週ボタン用のダミー関数（モックアップ用）
+    function getWeekStart(date) {
+        const copy = new Date(date)
+        copy.setHours(0, 0, 0, 0)
+        copy.setDate(copy.getDate() - 6)
+        return copy
+    }
+
+    function buildWeek(start) {
+        const week = []
+        for (let i = 0; i < 7; i++) {
+            const cellDate = new Date(start)
+            cellDate.setDate(start.getDate() + i)
+            week.push(cellDate)
+        }
+        return week
+    }
+
+    function formatStampKey(date) {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+    }
+
+    function getStoredStampDate() {
+        const stored = localStorage.getItem(STAMP_KEY)
+        return stored ? new Date(stored) : null
+    }
+
+    function isSameDate(a, b) {
+        return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+    }
+
+    function renderCalendar() {
+        const weekDates = buildWeek(currentWeekStart)
+        const storedStampDate = getStoredStampDate()
+        const start = weekDates[0]
+        const end = weekDates[6]
+        const monthLabel = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()
+            ? `${start.getFullYear()}/${pad(start.getMonth() + 1)}`
+            : `${start.getFullYear()}/${pad(start.getMonth() + 1)} - ${end.getFullYear()}/${pad(end.getMonth() + 1)}`
+
+        document.getElementById('current-month').innerText = monthLabel
+        const grid = document.getElementById('calendar-grid')
+        const header = document.getElementById('calendar-header')
+        grid.innerHTML = ''
+        header.innerHTML = ''
+
+        const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+
+        weekDates.forEach((date) => {
+            // Header
+            const hSpan = document.createElement('span')
+            hSpan.innerText = dayNames[date.getDay()]
+            if (date.getDay() === 0) hSpan.style.color = '#E22B22' // Sunday is red
+            header.appendChild(hSpan)
+
+            // Cell
+            const cell = document.createElement('div')
+            cell.className = 'calendar-cell'
+            if (isSameDate(date, new Date())) {
+                cell.classList.add('today')
+            }
+
+            const dateEl = document.createElement('div')
+            dateEl.className = 'cell-date'
+            dateEl.innerText = `${date.getMonth() + 1}/${date.getDate()}`
+            if (date.getDay() === 0) dateEl.style.color = '#E22B22' // Sunday is red
+            cell.appendChild(dateEl)
+
+            if (storedStampDate && isSameDate(date, storedStampDate)) {
+                const stamp = document.createElement('img')
+                stamp.src = 'stamp.png'
+                stamp.className = 'stamp-img'
+                stamp.alt = 'ブラックサンダー'
+                cell.appendChild(stamp)
+            }
+
+            grid.appendChild(cell)
+        })
+    }
+
     function changeWeek(direction) {
-        alert("ハッカソンデモ用のため、現在のリアルタイム週に固定されています！");
+        currentWeekStart.setDate(currentWeekStart.getDate() + direction * 7)
+        renderCalendar()
+    }
+
+    function handleOkClick() {
+        const storedStampDate = getStoredStampDate()
+        if (storedStampDate && isSameDate(new Date(), storedStampDate)) {
+            window.location.href = 'nouzeizumi.html'
+        } else {
+            window.location.href = 'gamen.html'
+        }
     }
 
     // 🌟 メインのデータ連結処理
     document.addEventListener('DOMContentLoaded', () => {
         // カレンダー画面を生成
-        generateCalendar();
+        renderCalendar();
 
         // 魔法のメモ帳（localStorage）から前の画面で保存したデータを引っ張ってくる
         const totalTax = localStorage.getItem('tax_total') || '0';

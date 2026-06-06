@@ -34,6 +34,7 @@ function App() {
   const tmModelRef = useRef(null)
   const tmLabelsRef = useRef(['bag', 'none'])
   const tmInputSizeRef = useRef(224)
+  const TAX_STAMP_DATE_KEY = 'blackthunderTaxStampDate'
 
 
   
@@ -187,6 +188,14 @@ const loadModel = async () => {
       overlayVideoRef.current.currentTime = 0
     }
     setShowFullScreenVideo(false)
+  }
+
+  const handleOverlayVideoEnded = () => {
+    setShowFullScreenVideo(false)
+    // 開発中のテストのため一時的にスタンプ記録を無効化
+    // const todayISO = new Date().toISOString()
+    // localStorage.setItem(TAX_STAMP_DATE_KEY, todayISO)
+    window.location.href = '../hyo.html'
   }
 
   const addSample = async (label) => {
@@ -446,7 +455,7 @@ const loadModel = async () => {
                 src={overlayVideoSrc}
                 playsInline
                 preload="auto"
-                onEnded={hideFullScreenVideo}
+                onEnded={handleOverlayVideoEnded}
               />
               <button type="button" className="close-overlay" onClick={hideFullScreenVideo}>
                 閉じる
