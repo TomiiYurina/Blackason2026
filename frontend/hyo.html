@@ -257,9 +257,43 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.9);
     }
 
+    /* 🚨 糖分枯渇アラート用スタイル */
+    @keyframes emergencyBlink {
+        0% { background-color: #F4EBD0; }
+        50% { background-color: #ffcccc; }
+        100% { background-color: #F4EBD0; }
+    }
+    body.emergency {
+        animation: emergencyBlink 1.5s infinite;
+    }
+    .emergency-banner {
+        width: 100%;
+        background-color: #E22B22;
+        color: #FDE11D;
+        text-align: center;
+        font-size: 24px;
+        font-weight: 900;
+        padding: 15px 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        letter-spacing: 2px;
+        animation: bannerBlink 0.8s infinite alternate;
+    }
+    @keyframes bannerBlink {
+        from { opacity: 1; }
+        to { opacity: 0.8; }
+    }
+
 </style>
 </head>
 <body>
+
+<div id="emergency-banner" class="emergency-banner" style="display:none;">
+    ⚠️ WARNING: 糖分枯渇の危機！直ちにブラックサンダーを補給してください ⚠️
+</div>
 
 <div class="app-container">
     <header>
@@ -460,6 +494,13 @@
             // 💡 【重要ロジック】税額（本）を四捨五入して、お菓子の「個数」に変換する！
             const displayCount = Math.round(taxFloat); 
             totalDisplayElement.innerText = `納税は${displayCount}個です`;
+
+            // 🚨 糖分枯渇アラートロジック
+            if (displayCount >= 1) {
+                document.body.classList.add('emergency');
+                const banner = document.getElementById('emergency-banner');
+                if (banner) banner.style.display = 'block';
+            }
         }
 
         
