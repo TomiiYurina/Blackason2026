@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マイデータ カレンダー - ブラックサンダー風</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap');
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #F4EBD0; 
+        font-family: 'Zen Maru Gothic', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .app-container {
+        width: 1100px; /* 表を追加するため少し横幅を広げました */
+        min-height: 650px;
+        background-color: transparent;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    /* ヘッダー領域 */
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .clock-container {
+        background-color: #1A1A1A;
+        color: #FDE11D;
+        font-size: 48px;
+        font-weight: 900;
+        padding: 10px 25px;
+        border-radius: 10px;
+        border: 4px solid #E22B22; 
+        font-family: 'Courier New', Courier, monospace;
+        text-shadow: 0 0 10px rgba(253, 225, 29, 0.5); 
+        box-shadow: 4px 4px 0px rgba(0,0,0,0.8);
+        transform: rotate(-3deg); 
+        position: relative;
+    }
+    .clock-container::before {
+        content: '⚡';
+        position: absolute;
+        top: -15px;
+        left: -15px;
+        font-size: 30px;
+    }
+
+    .title {
+        font-size: 40px;
+        font-weight: 900;
+        color: #3D1C04;
+        text-shadow: 2px 2px 0px #FFF;
+        letter-spacing: 2px;
+    }
+
+    /* 日付セレクター */
+    .date-selector-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .date-selector {
+        display: flex;
+        align-items: center;
+        background-color: #31160a;
+        padding: 10px 20px;
+        border-radius: 15px;
+        border: 3px solid #5e351f;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    }
+    .date-selector button {
+        background: #4a2311;
+        color: #C5A059;
+        border: 2px solid #1a0a03;
+        font-size: 28px;
+        cursor: pointer;
+        padding: 5px 25px;
+        border-radius: 8px;
+        transition: all 0.2s;
+        font-weight: bold;
+    }
+    .date-selector button:hover {
+        background: #5e351f;
+        transform: scale(1.05);
+    }
+    .date-selector button:active {
+        transform: scale(0.95);
+    }
+    .date-selector span {
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        margin: 0 40px;
+        letter-spacing: 3px;
+    }
+
+    /* カレンダー領域 */
+    .calendar-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: 2px solid #EAEAEA;
+        margin-bottom: 20px;
+    }
+    .calendar-header {
+        display: flex;
+        background-color: #FAFAFA;
+        border-bottom: 2px solid #EAEAEA;
+    }
+    .calendar-header span {
+        flex: 1;
+        text-align: center;
+        padding: 10px 0;
+        font-weight: bold;
+        color: #555;
+        font-size: 16px;
+    }
+    .calendar-header span:first-child { color: #E22B22; }
+
+    .calendar-grid {
+        display: flex;
+        height: 120px; /* 少し高さを縮めて表のスペースを確保 */
+    }
+    .calendar-cell {
+        flex: 1;
+        border-right: 1px solid #EAEAEA;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .calendar-cell:last-child { border-right: none; }
+    
+    .cell-date {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        align-self: flex-start;
+        margin-bottom: 8px;
+    }
+    .calendar-cell:first-child .cell-date { color: #E22B22; }
+
+    /* スタンプ画像 */
+    .stamp-img {
+        width: 95%;
+        height: auto;
+        margin-top: 5px;
+        border-radius: 5px;
+        box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+        transform: rotate(-3deg);
+        animation: stampIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes stampIn {
+        0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+        100% { transform: scale(1) rotate(-3deg); opacity: 1; }
+    }
+
+    /* ボトム領域（表とボタン群） */
+    .bottom-area {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end; /* 下揃え */
+        gap: 30px;
+        margin-top: 10px;
+    }
+
+    /* 左側：税の表 */
+    .tax-table-container {
+        flex: 1; /* 左側を広く取る */
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: 2px solid #EAEAEA;
+    }
+    .tax-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        font-size: 14px;
+    }
+    .tax-table th, .tax-table td {
+        border: 1px solid #EAEAEA;
+        padding: 12px 8px;
+    }
+    .tax-table th {
+        background-color: #FAFAFA;
+        color: #555;
+        font-weight: bold;
+    }
+    .tax-table td {
+        color: #333;
+        font-weight: 500;
+    }
+    .tax-table td:nth-child(1) { text-align: left; padding-left: 15px; } /* 税の名前 */
+    .tax-table td:nth-child(2) { text-align: left; padding-left: 15px; font-size: 13px; } /* 条件 */
+
+    /* 右側：アクションエリア */
+    .action-area {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .tax-message {
+        font-size: 32px;
+        font-weight: 900;
+        color: white;
+        background-color: #1A1A1A;
+        padding: 15px 30px;
+        border-radius: 5px;
+        border-left: 10px solid #FDE11D;
+        text-shadow: 2px 2px 0px #000;
+        box-shadow: 4px 4px 0px rgba(0,0,0,0.4);
+        letter-spacing: 1px;
+    }
+
+    .ok-btn {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #5e351f, #31160a);
+        border: 5px solid #C5A059;
+        color: #C5A059;
+        font-size: 36px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.8);
+        transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
+        font-family: serif;
+        flex-shrink: 0;
+    }
+    .ok-btn:hover {
+        background: linear-gradient(145deg, #6e3e24, #3d1c0d);
+    }
+    .ok-btn:active {
+        transform: translateY(6px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.9);
+    }
+
+</style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- ヘッダー（時計とタイトル） -->
+    <header>
+        <div class="clock-container" id="realtime-clock">--:--</div>
+        <div class="title">マイデータ カレンダー</div>
+    </header>
+    
+    <!-- 日付セレクター -->
+    <div class="date-selector-wrapper">
+        <div class="date-selector">
+            <button onclick="changeWeek(-1)" aria-label="前の週へ">◀</button>
+            <span id="current-month">2020/05</span>
+            <button onclick="changeWeek(1)" aria-label="次の週へ">▶</button>
+        </div>
+    </div>
+
+    <!-- カレンダー表 -->
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+        </div>
+        <div class="calendar-grid" id="calendar-grid">
+            <!-- JSで動的に生成されます -->
+        </div>
+    </div>
+
+    <!-- ボトム領域（税の表とOKボタン） -->
+    <div class="bottom-area">
+        
+        <!-- 左側：税の表 -->
+        <div class="tax-table-container">
+            <table class="tax-table">
+                <thead>
+                    <tr>
+                        <th>税の名前</th>
+                        <th>条件</th>
+                        <th>税額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>① 量産型コミット税</td>
+                        <td>コミット数</td>
+                        <td>0.4本</td>
+                    </tr>
+                    <tr>
+                        <td>② 金曜日お疲れ様税</td>
+                        <td>金曜日の17:00〜23:59にアプリを開いた場合</td>
+                        <td>0.6本</td>
+                    </tr>
+                    <tr>
+                        <td>③ 休日出勤サボり監視税</td>
+                        <td>土曜日・日曜日に開発している場合</td>
+                        <td>0.5本</td>
+                    </tr>
+                    <tr>
+                        <td>④ 不健康不夜城労働税</td>
+                        <td>22:00〜5:00にアプリを開いた場合</td>
+                        <td>0.5本</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 右側：アクションエリア -->
+        <div class="action-area">
+            <div class="tax-message">納税は1個です</div>
+            <button class="ok-btn" onclick="window.location.href='gamen.html'">OK</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function updateClock() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('realtime-clock').innerText = `${hours}:${minutes}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    let currentWeekIndex = 0;
+    
+    const weekData = [
+        {
+            monthLabel: "2020/05",
+            dates: [3, 4, 5, 6, 7, 8, 9],
+            stamps: [true, true, true, true, true, false, false]
+        },
+        {
+            monthLabel: "2020/05 (次週)",
+            dates: [10, 11, 12, 13, 14, 15, 16],
+            stamps: [false, false, false, false, false, false, false]
+        }
+    ];
+
+    function renderCalendar() {
+        const data = weekData[currentWeekIndex];
+        document.getElementById('current-month').innerText = data.monthLabel;
+        
+        const grid = document.getElementById('calendar-grid');
+        grid.innerHTML = '';
+        
+        data.dates.forEach((dateNum, index) => {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell';
+            
+            const dateEl = document.createElement('div');
+            dateEl.className = 'cell-date';
+            dateEl.innerText = dateNum;
+            cell.appendChild(dateEl);
+            
+            if (data.stamps[index]) {
+                const stamp = document.createElement('img');
+                stamp.src = 'stamp.png';
+                stamp.className = 'stamp-img';
+                stamp.alt = 'ブラックサンダー';
+                cell.appendChild(stamp);
+            }
+            
+            grid.appendChild(cell);
+        });
+    }
+
+    function changeWeek(direction) {
+        currentWeekIndex += direction;
+        if (currentWeekIndex < 0) currentWeekIndex = 0;
+        if (currentWeekIndex > weekData.length - 1) currentWeekIndex = weekData.length - 1;
+        renderCalendar();
+    }
+
+    renderCalendar();
+
+</script>
+
+</body>
+</html>
