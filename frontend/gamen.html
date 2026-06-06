@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ブラックサンダー 納税</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #333; /* 暗めの背景にして画像を際立たせる */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .image-container {
+        position: relative;
+        max-width: 100%;
+        max-height: 100vh;
+        display: inline-block;
+        /* 画像に影をつけて画面の中央で少し浮かせる */
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .background-image {
+        display: block;
+        max-width: 100%;
+        max-height: 100vh;
+        object-fit: contain;
+    }
+
+    /* 透明なクリック可能領域（ボタン） */
+    .tax-button-overlay {
+        position: absolute;
+        /* 画像に対する相対的な位置とサイズ */
+        /* 画像の「納税」ボタンの部分に合うように調整 */
+        left: 23%;
+        top: 66%;
+        width: 54%;
+        height: 22%;
+        /* 最初は完全透明 */
+        background-color: transparent;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        /* ボタンの角丸に合わせて少し丸みをつける */
+        border-radius: 15px; 
+        transition: background-color 0.2s;
+    }
+
+    /* マウスオーバー時に少しだけ白っぽく光るようにして、押せることを伝える */
+    .tax-button-overlay:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    /* クリック時に少し暗くして押し込んだ感を出す */
+    .tax-button-overlay:active {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+</style>
+</head>
+<body>
+
+<div class="image-container">
+    <!-- 先ほど保存していただいた画像を読み込む -->
+    <img src="background.png" alt="ブラックサンダー 納税画面" class="background-image">
+    
+    <!-- 画像の「納税」部分の上に透明なボタンを重ねる -->
+    <button class="tax-button-overlay" onclick="alert('納税ありがとうございます！');" aria-label="納税"></button>
+</div>
+
+</body>
+</html>
