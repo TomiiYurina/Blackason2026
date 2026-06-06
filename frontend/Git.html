@@ -97,10 +97,8 @@
 <body>
 
 <div class="container">
-    <!-- 背景としてGit.pngを読み込む -->
     <img src="Git.png" alt="背景" class="bg-image" onerror="alert('Git.pngが読み込めません。画像が正しい場所にあるか確認してください。');">
     
-    <!-- 画像の上に本物の入力フォームとボタンを配置 -->
     <input type="text" id="githubId" class="github-input" placeholder="入力...">
     <button class="ok-button" onclick="submitGitHub()">OK</button>
 </div>
@@ -128,24 +126,28 @@
             const apiUrl = `http://127.0.0.1:8000/api/tax/calculate-auto/${githubId}`;
             const response = await fetch(apiUrl);
             
-            if (response.ok) {
-                const data = await response.json();
-                
-                // 🌟 2. 魔法のメモ帳（localStorage）にユーザー名を記憶させる
-                localStorage.setItem('github_username', githubId);
-                
-                // 🌟 3. バックエンドから返ってきた計算結果も一時的にメモ帳に保存する（次の画面で使うため）
-                localStorage.setItem('tax_total', data.total_tax);
-                localStorage.setItem('tax_breakdown', JSON.stringify(data.breakdown));
-                
-                // 確認のメッセージ
-                alert(`⚡️ ${githubId} さんの環境監査が完了しました！次の画面で詳細を確認してください。`);
-                // 🌟 4. 次の表画面「hyo.html」へ自動的にジャンプする！
-                window.location.href = 'hyo.html';
-                
-            } else {
-                alert('バックエンドのサーバーから正しいデータが返ってきませんでした。');
+            // 🚨【今回の重要修正！】もしバックエンドからエラー（404など）が返ってきた場合
+            if (!response.ok) {
+                const errorData = await response.json();
+                // FastAPI側で設定した「GitHubユーザー〇〇が見つかりませんでした…」の文章をそのままアラートで出す
+                alert(errorData.detail || 'エラーが発生しました。ユーザー名を確認してください。');
+                return; // ❌ 次の画面（hyo.html）へ進ませずに、ここで処理をストップさせる！
             }
+            
+            // 🌟 通信成功（200 OK）のときだけ、以下の正常処理が動く
+            const data = await response.json();
+            
+            // 🌟 2. 魔法のメモ帳（localStorage）にユーザー名を記憶させる
+            localStorage.setItem('github_username', githubId);
+            
+            // 🌟 3. バックエンドから返ってきた計算結果も一時的にメモ帳に保存する（次の画面で使うため）
+            localStorage.setItem('tax_total', data.total_tax);
+            localStorage.setItem('tax_breakdown', JSON.stringify(data.breakdown));
+            
+            // 確認のメッセージ
+            alert(`⚡️ ${githubId} さんの環境監査が完了しました！次の画面で詳細を確認してください。`);
+            // 🌟 4. 次の表画面「hyo.html」へ自動的にジャンプする！
+            window.location.href = 'hyo.html';
             
         } catch (error) {
             console.error("通信エラー:", error);
