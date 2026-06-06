@@ -120,6 +120,10 @@
             alert('GitHubのユーザー名を入力してください！');
             return;
         }
+
+        const crunchAudio = new Audio('3939.mp3');
+        crunchAudio.volume = 1.0;
+        crunchAudio.play();
         
         try {
             // 🌟 1. あなたが作ったFastAPI（誰の名前でも受け取れる部屋）に通信する！

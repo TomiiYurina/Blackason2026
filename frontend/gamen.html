@@ -69,8 +69,21 @@
     <img src="background.png" alt="ブラックサンダー 納税画面" class="background-image">
     
     <!-- 画像の「納税」部分の上に透明なボタンを重ねる -->
-    <button class="tax-button-overlay" onclick="window.location.href = './dist/index.html';" aria-label="納税"></button>
+    <button class="tax-button-overlay" onclick="playCrunchAndNavigate()" aria-label="納税"></button>
 </div>
+
+<script>
+    const crunchAudio = new Audio('3939.mp3');
+    crunchAudio.volume = 1.0;
+
+    function playCrunchAndNavigate() {
+        crunchAudio.currentTime = 0;
+        crunchAudio.play();
+        setTimeout(() => {
+            window.location.href = './dist/index.html';
+        }, 500);
+    }
+</script>
 
 </body>
 </html>
