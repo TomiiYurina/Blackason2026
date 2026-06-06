@@ -26,6 +26,7 @@ function App() {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const overlayVideoRef = useRef(null)
+  const overlayVideoSrc = `${import.meta.env.BASE_URL}media/nouzeikanryou_sound.mp4`
   const streamRef = useRef(null)
   const classifierRef = useRef(null)
   const mobileNetRef = useRef(null)
@@ -442,8 +443,9 @@ const loadModel = async () => {
               <video
                 ref={overlayVideoRef}
                 className="fullscreen-video"
-                src="/media/nouzeikanryou_sound.mp4"
+                src={overlayVideoSrc}
                 playsInline
+                preload="auto"
                 onEnded={hideFullScreenVideo}
               />
               <button type="button" className="close-overlay" onClick={hideFullScreenVideo}>
