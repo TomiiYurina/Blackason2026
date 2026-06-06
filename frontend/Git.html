@@ -138,9 +138,8 @@
                 localStorage.setItem('tax_total', data.total_tax);
                 localStorage.setItem('tax_breakdown', JSON.stringify(data.breakdown));
                 
-                // 確認のメッセージ（テストが終わったら消すか、そのまま演出にしてもOK！）
-                alert(`🌿 ${githubId} さんの草の検知に成功しました！(合計税額: ${data.total_tax}本)`);
-                
+                // 確認のメッセージ
+                alert(`⚡️ ${githubId} さんの環境監査が完了しました！次の画面で詳細を確認してください。`);
                 // 🌟 4. 次の表画面「hyo.html」へ自動的にジャンプする！
                 window.location.href = 'hyo.html';
                 
