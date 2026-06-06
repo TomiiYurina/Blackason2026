@@ -106,19 +106,51 @@
 </div>
 
 <script>
-    // OKボタンを押したときの処理
-    function submitGitHub() {
-        const githubId = document.getElementById('githubId').value;
-        if (githubId.trim() === '') {
-            alert('GitHubのアカウント名を入力してください！');
+    // ページが開いた瞬間、もし前に一度でも入力したことがあれば自動で入力欄に入れる（優しさ機能）
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedUsername = localStorage.getItem('github_username');
+        if (savedUsername) {
+            document.getElementById('githubId').value = savedUsername;
+        }
+    });
+
+    // OKボタンを押したとき、またはEnterを押したときの処理
+    async function submitGitHub() {
+        const githubId = document.getElementById('githubId').value.trim();
+        
+        if (githubId === '') {
+            alert('GitHubのユーザー名を入力してください！');
             return;
         }
         
-        // 入力成功時の処理
-        alert(githubId + ' のアカウントを確認しました！');
-        
-        // （もし次の画面へ進むなら、以下のコメントアウトを外して遷移先を指定）
-        // window.location.href = 'hyo.html';
+        try {
+            // 🌟 1. あなたが作ったFastAPI（誰の名前でも受け取れる部屋）に通信する！
+            const apiUrl = `http://127.0.0.1:8000/api/tax/calculate-auto/${githubId}`;
+            const response = await fetch(apiUrl);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // 🌟 2. 魔法のメモ帳（localStorage）にユーザー名を記憶させる
+                localStorage.setItem('github_username', githubId);
+                
+                // 🌟 3. バックエンドから返ってきた計算結果も一時的にメモ帳に保存する（次の画面で使うため）
+                localStorage.setItem('tax_total', data.total_tax);
+                localStorage.setItem('tax_breakdown', JSON.stringify(data.breakdown));
+                
+                // 確認のメッセージ
+                alert(`⚡️ ${githubId} さんの環境監査が完了しました！次の画面で詳細を確認してください。`);
+                // 🌟 4. 次の表画面「hyo.html」へ自動的にジャンプする！
+                window.location.href = 'hyo.html';
+                
+            } else {
+                alert('バックエンドのサーバーから正しいデータが返ってきませんでした。');
+            }
+            
+        } catch (error) {
+            console.error("通信エラー:", error);
+            alert('バックエンドサーバー（FastAPI）が起動しているか確認してください！');
+        }
     }
 
     // Enterキーを押したときにもOKボタンと同じ処理をする
