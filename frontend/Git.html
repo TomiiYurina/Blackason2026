@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHubアカウント入力 - ブラックサンダー</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #f2d174; /* 画像の背景色に合わせた色 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    /* 画像にピッタリフィットするコンテナ */
+    .container {
+        position: relative;
+        width: 95vw;
+        max-width: 1200px;
+        /* 余計な装飾はせず、画像自体のデザインを活かす */
+    }
+
+    .bg-image {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    /* 入力フォーム（画像上の枠線を「完全に上書きして隠す」作戦） */
+    .github-input {
+        position: absolute;
+        left: 39.0%; /* 少し広げて元画像を隠す */
+        top: 49.0%; 
+        width: 16.2%; /* 少し広げる */
+        height: 3.8%; /* 少し高くする */
+        border: 2px solid #000; /* 自分自身の枠線を持つ */
+        background-color: #FFF; /* 完全に白塗りで元の画像を隠す */
+        padding: 0 10px;
+        box-sizing: border-box;
+        font-size: 1.2vw;
+        outline: none;
+        color: #000;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .github-input:focus {
+        border-color: #E22B22; 
+        box-shadow: 0 0 5px rgba(226, 43, 34, 0.5);
+    }
+    .github-input::placeholder {
+        color: #999;
+    }
+
+    /* OKボタン（こちらも画像上の枠線を完全に上書きする） */
+    .ok-button {
+        position: absolute;
+        left: 55.5%; /* 少し広げて元画像を隠す */
+        top: 49.0%;
+        width: 4.2%; /* 少し広げる */
+        height: 3.8%; /* 少し高くする */
+        border: 2px solid #000; /* 自分自身の枠線を持つ */
+        background-color: #FFF; 
+        color: #000; /* 文字を表示する */
+        font-weight: bold;
+        font-size: 1.2vw;
+        cursor: pointer;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        transition: background-color 0.1s, transform 0.1s;
+    }
+    .ok-button:hover {
+        background-color: #F0F0F0;
+    }
+    .ok-button:active {
+        background-color: #DDD;
+        transform: scale(0.95);
+    }
+
+    /* 画面が大きくなったときの文字サイズの制限 */
+    @media (min-width: 1200px) {
+        .github-input { font-size: 16px; border-width: 3px; }
+        .ok-button { font-size: 16px; border-width: 3px; }
+    }
+    /* 画面が小さいときの枠線の調整 */
+    @media (max-width: 800px) {
+        .github-input, .ok-button { border-width: 1px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 背景としてGit.pngを読み込む -->
+    <img src="Git.png" alt="背景" class="bg-image" onerror="alert('Git.pngが読み込めません。画像が正しい場所にあるか確認してください。');">
+    
+    <!-- 画像の上に本物の入力フォームとボタンを配置 -->
+    <input type="text" id="githubId" class="github-input" placeholder="入力...">
+    <button class="ok-button" onclick="submitGitHub()">OK</button>
+</div>
+
+<script>
+    // OKボタンを押したときの処理
+    function submitGitHub() {
+        const githubId = document.getElementById('githubId').value;
+        if (githubId.trim() === '') {
+            alert('GitHubのアカウント名を入力してください！');
+            return;
+        }
+        
+        // 入力成功時の処理
+        alert(githubId + ' のアカウントを確認しました！');
+        
+        // （もし次の画面へ進むなら、以下のコメントアウトを外して遷移先を指定）
+        // window.location.href = 'hyo.html';
+    }
+
+    // Enterキーを押したときにもOKボタンと同じ処理をする
+    document.getElementById('githubId').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            submitGitHub();
+        }
+    });
+</script>
+
+</body>
+</html>
