@@ -18,10 +18,14 @@ function App() {
   const [result, setResult] = useState('まだ判定されていません。')
   const [message, setMessage] = useState('カメラを開始してキャプチャしてください。')
   const [error, setError] = useState('')
+  const [bagExamples, setBagExamples] = useState(0)
+  const [noneExamples, setNoneExamples] = useState(0)
+  const [showFullScreenVideo, setShowFullScreenVideo] = useState(false)
   const batchTimerRef = useRef(null)
 
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
+  const overlayVideoRef = useRef(null)
   const streamRef = useRef(null)
   const classifierRef = useRef(null)
   const mobileNetRef = useRef(null)
@@ -163,6 +167,25 @@ const loadModel = async () => {
       setMessage('カメラを開始できませんでした。')
       setCameraOn(false)
     }
+  }
+
+  const playFullScreenVideo = async () => {
+    if (!overlayVideoRef.current) return
+    setShowFullScreenVideo(true)
+    overlayVideoRef.current.currentTime = 0
+    try {
+      await overlayVideoRef.current.play()
+    } catch (err) {
+      console.warn('動画再生に失敗しました', err)
+    }
+  }
+
+  const hideFullScreenVideo = () => {
+    if (overlayVideoRef.current) {
+      overlayVideoRef.current.pause()
+      overlayVideoRef.current.currentTime = 0
+    }
+    setShowFullScreenVideo(false)
   }
 
   const addSample = async (label) => {
@@ -331,6 +354,11 @@ const loadModel = async () => {
         const label = res.label === 'sample' ? 'ブラックサンダーです！' : '違います'
         setResult(label)
         setMessage('判定完了（Teachable Machine）')
+        if (label === 'ブラックサンダーです！') {
+          playFullScreenVideo()
+        } else {
+          hideFullScreenVideo()
+        }
         return
       } catch (e) {
         console.warn('TM predict failed, falling back to KNN', e)
@@ -352,6 +380,11 @@ const loadModel = async () => {
       const label = prediction.label === 'bag' || prediction.label === 'sample' ? 'ブラックサンダーです！' : '違います'
       setResult(label)
       setMessage('判定完了です。')
+      if (label === 'ブラックサンダーです！') {
+        playFullScreenVideo()
+      } else {
+        hideFullScreenVideo()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '判定に失敗しました')
     }
@@ -403,6 +436,19 @@ const loadModel = async () => {
                 {result}
               </div>
               {error && <div className="message error">{error}</div>}
+            </div>
+
+            <div className={`fullscreen-video-overlay ${showFullScreenVideo ? 'visible' : ''}`}>
+              <video
+                ref={overlayVideoRef}
+                className="fullscreen-video"
+                src="/media/nouzeikanryou_sound.mp4"
+                playsInline
+                onEnded={hideFullScreenVideo}
+              />
+              <button type="button" className="close-overlay" onClick={hideFullScreenVideo}>
+                閉じる
+              </button>
             </div>
           </div>
         )}
