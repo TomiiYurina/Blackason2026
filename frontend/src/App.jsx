@@ -361,7 +361,7 @@ const loadModel = async () => {
     if (tmModelRef.current && canvasRef.current) {
       try {
         const res = await predictWithTM(canvasRef.current)
-        const label = res.label === 'sample' ? 'ブラックサンダーです！' : '違います'
+        const label = res.label === 'sample' ? 'ブラックサンダーです！' : '本当にブラックサンダー食べてる？'
         setResult(label)
         setMessage('判定完了（Teachable Machine）')
         if (label === 'ブラックサンダーです！') {
@@ -387,7 +387,7 @@ const loadModel = async () => {
     try {
       const activation = mobileNetRef.current.infer(videoRef.current, true)
       const prediction = await classifierRef.current.predictClass(activation)
-      const label = prediction.label === 'bag' || prediction.label === 'sample' ? 'ブラックサンダーです！' : '違います'
+      const label = prediction.label === 'bag' || prediction.label === 'sample' ? 'ブラックサンダーです！' : '本当にブラックサンダー食べてる？'
       setResult(label)
       setMessage('判定完了です。')
       if (label === 'ブラックサンダーです！') {
@@ -442,7 +442,7 @@ const loadModel = async () => {
 
             <div className="status-box">
               <p className="status-label">判定結果</p>
-              <div className={`message ${result === 'ブラックサンダーです！' ? 'success' : result === '違います' ? 'error' : 'info'}`}>
+              <div className={`message ${result === 'ブラックサンダーです！' ? 'success' : result === '本当にブラックサンダー食べてる？' ? 'error' : 'info'}`}>
                 {result}
               </div>
               {error && <div className="message error">{error}</div>}
