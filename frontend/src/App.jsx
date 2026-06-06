@@ -42,6 +42,7 @@ function App() {
   const [batchProgress, setBatchProgress] = useState(0)
   const [batchTarget, setBatchTarget] = useState(5)
   const [result, setResult] = useState('まだ判定されていません。')
+  const [taunt, setTaunt] = useState('')
   const [message, setMessage] = useState('カメラを開始してキャプチャしてください。')
   const [error, setError] = useState('')
   const [bagExamples, setBagExamples] = useState(0)
@@ -169,6 +170,7 @@ const loadModel = async () => {
     setError('')
     setMessage('カメラを起動しています…')
     setResult('まだ判定されていません。')
+    setTaunt('')
     setCaptured(false)
 
     try {
@@ -393,12 +395,21 @@ const loadModel = async () => {
     if (tmModelRef.current && canvasRef.current) {
       try {
         const res = await predictWithTM(canvasRef.current)
-        const label = res.label === 'sample' ? 'ブラックサンダーです！' : '本当にブラックサンダー食べてる？'
-        setResult(label)
-        setMessage('判定完了（Teachable Machine）')
-        if (label === 'ブラックサンダーです！') {
+        const isBag = res.label === 'sample' || res.label === 'bag'
+        if (isBag) {
+          setResult('ブラックサンダーです！')
+          setTaunt('')
+          setMessage('判定完了（Teachable Machine）')
           playFullScreenVideo()
         } else {
+          setResult('ブラックサンダーが見つかりませんでした。')
+          const taunts = [
+            "バグは直らなくても、ブラックサンダーは裏切らないよ？",
+            "コンパイル待ちのスキマ時間、ブラックサンダーかじりませんか？",
+            "噛みごたえのある糖分も必要じゃない？"
+          ]
+          setTaunt(taunts[Math.floor(Math.random() * taunts.length)])
+          setMessage('判定完了（Teachable Machine）')
           hideFullScreenVideo()
         }
         return
@@ -419,12 +430,22 @@ const loadModel = async () => {
     try {
       const activation = mobileNetRef.current.infer(videoRef.current, true)
       const prediction = await classifierRef.current.predictClass(activation)
-      const label = prediction.label === 'bag' || prediction.label === 'sample' ? 'ブラックサンダーです！' : '本当にブラックサンダー食べてる？'
-      setResult(label)
-      setMessage('判定完了です。')
-      if (label === 'ブラックサンダーです！') {
+      const isBag = prediction.label === 'bag' || prediction.label === 'sample'
+      
+      if (isBag) {
+        setResult('ブラックサンダーです！')
+        setTaunt('')
+        setMessage('判定完了です。')
         playFullScreenVideo()
       } else {
+        setResult('ブラックサンダーが見つかりませんでした。')
+        const taunts = [
+          "バグは直らなくても、ブラックサンダーは裏切らないよ？",
+          "コンパイル待ちのスキマ時間、ブラックサンダーかじりませんか？",
+          "噛みごたえのある糖分も必要じゃない？"
+        ]
+        setTaunt(taunts[Math.floor(Math.random() * taunts.length)])
+        setMessage('判定完了です。')
         hideFullScreenVideo()
       }
     } catch (err) {
@@ -479,8 +500,9 @@ const loadModel = async () => {
 
             <div className="status-box">
               <p className="status-label">判定結果</p>
-              <div className={`message ${result === 'ブラックサンダーです！' ? 'success' : result === '本当にブラックサンダー食べてる？' ? 'error' : 'info'}`}>
+              <div className={`message ${result === 'ブラックサンダーです！' ? 'success' : result === 'ブラックサンダーが見つかりませんでした。' ? 'error' : 'info'}`}>
                 {result}
+                {taunt && <div style={{ color: '#3D1C04', marginTop: '10px', fontSize: '1.05rem', fontWeight: 'bold' }}>{taunt}</div>}
               </div>
               {error && <div className="message error">{error}</div>}
             </div>
