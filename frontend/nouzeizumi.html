@@ -102,10 +102,70 @@
 
 <div class="container">
     <div class="thunder-icon">⚡</div>
-    <h1>納税完了！</h1>
-    <p>本日のブラックサンダー税は<br>すでに納付済みです。<br>明日も開発頑張りましょう！</p>
-    <a href="hyo.html" class="back-btn">カレンダーに戻る</a>
+    <h1 id="status-title">納税完了！</h1>
+    <p id="status-desc">本日のブラックサンダー税は<br>すでに納付済みです。<br>明日も開発頑張りましょう！</p>
+    <a href="#" id="action-btn" class="back-btn">カレンダーに戻る</a>
 </div>
+
+<script>
+    const crunchAudio = new Audio('3939.mp3');
+    crunchAudio.volume = 1.0;
+
+    function isSameDate(a, b) {
+        return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const totalRequired = parseInt(localStorage.getItem('final_tax_to_pay') || '1', 10);
+        let paidCount = 0;
+        
+        const stored = localStorage.getItem('blackthunderTaxStampDate');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (parsed && parsed.date && isSameDate(new Date(), new Date(parsed.date))) {
+                    paidCount = parseInt(parsed.count, 10) || 1;
+                }
+            } catch(e) {
+                if (isSameDate(new Date(), new Date(stored))) {
+                    paidCount = 1;
+                }
+            }
+        }
+        
+        const remaining = Math.max(0, totalRequired - paidCount);
+        
+        const titleEl = document.getElementById('status-title');
+        const descEl = document.getElementById('status-desc');
+        const btnEl = document.getElementById('action-btn');
+        
+        if (remaining > 0) {
+            titleEl.innerText = `残り納税は${remaining}個です`;
+            descEl.innerHTML = `${paidCount}個目の納税を確認しました。<br>残りのブラックサンダーを納税してください！`;
+            btnEl.innerText = 'カレンダーに戻る';
+            btnEl.onclick = function(e) {
+                e.preventDefault();
+                crunchAudio.currentTime = 0;
+                crunchAudio.play();
+                setTimeout(() => {
+                    window.location.href = 'hyo.html';
+                }, 500);
+            }
+        } else {
+            titleEl.innerText = `お疲れ様です！`;
+            descEl.innerHTML = `本日のブラックサンダー税は<br>すべて納付完了しました。<br>明日も開発頑張りましょう！`;
+            btnEl.innerText = 'カレンダーに戻る';
+            btnEl.onclick = function(e) {
+                e.preventDefault();
+                crunchAudio.currentTime = 0;
+                crunchAudio.play();
+                setTimeout(() => {
+                    window.location.href = 'hyo.html';
+                }, 500);
+            }
+        }
+    });
+</script>
 
 </body>
 </html>

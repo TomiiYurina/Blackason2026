@@ -158,11 +158,10 @@
     .stamp-img {
         width: 70px; /* カレンダーセルに綺麗に収まるサイズに調整 */
         height: auto;
-        margin-top: 5px;
         border-radius: 5px;
         box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
-        transform: rotate(-3deg);
-        animation: stampIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0;
+        animation: stampIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
     .calendar-cell.today {
         background-color: #fff7d9;
@@ -217,6 +216,12 @@
     /* 右側：アクションエリア */
     .action-area {
         display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 15px;
+    }
+    .action-row {
+        display: flex;
         align-items: center;
         gap: 20px;
     }
@@ -257,6 +262,66 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.9);
     }
 
+    /* Thunder CAPTCHA 🛡️ */
+    .thunder-captcha {
+        background-color: #f9f9f9;
+        border: 1px solid #d3d3d3;
+        border-radius: 4px;
+        padding: 10px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 420px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-family: 'Zen Maru Gothic', sans-serif;
+        user-select: none;
+    }
+    .thunder-captcha-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .thunder-checkbox {
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        appearance: none;
+        background-color: #fff;
+        border: 2px solid #c1c1c1;
+        border-radius: 2px;
+        outline: none;
+        position: relative;
+    }
+    .thunder-checkbox:checked::after {
+        content: '✔';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #E22B22; 
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .thunder-captcha-label {
+        color: #555;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        line-height: 1.4;
+    }
+    .thunder-captcha-right {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .thunder-logo-text {
+        font-size: 10px;
+        color: #777;
+        margin-top: 2px;
+        letter-spacing: 0.5px;
+    }
+
     /* 🚨 糖分枯渇アラート用スタイル */
     @keyframes emergencyBlink {
         0% { background-color: #F4EBD0; }
@@ -294,6 +359,9 @@
 <div id="emergency-banner" class="emergency-banner" style="display:none;">
     ⚠️ WARNING: 糖分枯渇の危機！直ちにブラックサンダーを補給してください ⚠️
 </div>
+
+<!-- 開発・テスト用のリセットボタン -->
+<button onclick="localStorage.clear(); location.reload();" style="position: fixed; bottom: 10px; right: 10px; background: #333; color: white; border: none; padding: 5px 10px; border-radius: 5px; opacity: 0.5; cursor: pointer; font-size: 12px; z-index: 9999;">データリセット</button>
 
 <div class="app-container">
     <header>
@@ -354,16 +422,94 @@
         </div>
 
         <div class="action-area">
-            <div class="tax-message" id="tax-total-display">納税は0個です</div>
-            <button class="ok-btn" onclick="handleOkClick()">OK</button>
+            <div class="thunder-captcha">
+                <div class="thunder-captcha-left">
+                    <input type="checkbox" id="bug-report" class="thunder-checkbox" onchange="toggleBugTax()">
+                    <label for="bug-report" class="thunder-captcha-label">今日、解決できないバグに遭遇しましたか？</label>
+                </div>
+                <div class="thunder-captcha-right">
+                    <svg width="32" height="32" viewBox="0 0 40 40">
+                        <polygon points="18,5 36,5 26,16 8,16" fill="#FDE11D" />
+                        <polygon points="13,14 31,14 21,25 3,25" fill="#FDE11D" />
+                        <polygon points="11,23 27,23 19,34 3,34" fill="#A0A0A0" />
+                    </svg>
+                    <div class="thunder-logo-text">THUNDER</div>
+                </div>
+            </div>
+            <div class="action-row">
+                <div class="tax-message" id="tax-total-display">納税は0個です</div>
+                <button class="ok-btn" onclick="handleOkClick()">OK</button>
+            </div>
         </div>
 
     </div>
 </div>
 
 <script>
-    // テスト用に強制的にスタンプ記録を削除（後で元に戻します）
-    localStorage.removeItem('blackthunderTaxStampDate');
+    // 🍫 ザクザク！という音響効果（ユーザー指定のmp3を再生）
+    const crunchAudio = new Audio('3939.mp3');
+    crunchAudio.volume = 1.0;
+
+    function playCrunchSound() {
+        try {
+            // 連続でホバーした時にも最初から再生されるようにする
+            crunchAudio.currentTime = 0;
+            crunchAudio.play();
+        } catch (e) {
+            console.error("Audio API error:", e);
+        }
+    }
+
+    let baseTaxCount = 0;
+
+    function toggleBugTax(isInit = false) {
+        const checkbox = document.getElementById('bug-report');
+        let totalRequired = baseTaxCount;
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        if (checkbox.checked) {
+            totalRequired += 1; // 💡 バグ申告でブラックサンダー税+1個！
+            if (!isInit) playCrunchSound();
+            localStorage.setItem('bug_encountered_today', todayStr);
+        } else {
+            if (!isInit) playCrunchSound();
+            localStorage.removeItem('bug_encountered_today');
+        }
+        
+        // 既に支払った分を取得
+        const stampData = getStoredStampData();
+        let paidCount = 0;
+        if (stampData && isSameDate(new Date(), stampData.date)) {
+            paidCount = stampData.count;
+        }
+        
+        const remaining = Math.max(0, totalRequired - paidCount);
+
+        const totalDisplayElement = document.getElementById('tax-total-display');
+        if (totalDisplayElement) {
+            if (remaining === 0 && paidCount > 0) {
+                totalDisplayElement.innerText = `納税完了！`;
+            } else {
+                totalDisplayElement.innerText = `残り納税は${remaining}個です`;
+            }
+            
+            // 🚨 糖分枯渇アラートロジック
+            if (remaining >= 3) {
+                document.body.classList.add('emergency');
+                const banner = document.getElementById('emergency-banner');
+                if (banner) banner.style.display = 'block';
+            } else {
+                document.body.classList.remove('emergency');
+                const banner = document.getElementById('emergency-banner');
+                if (banner) banner.style.display = 'none';
+            }
+        }
+        
+        // カメラ画面へ引き継ぐため、本日の【トータル目標数】を保存
+        localStorage.setItem('final_tax_to_pay', totalRequired);
+    }
+
+    // テスト用のスタンプ記録削除ロジックを取り除きました
 
     // ⏰ リアルタイム時計を動かす関数
     function updateClock() {
@@ -403,9 +549,18 @@
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
     }
 
-    function getStoredStampDate() {
+    function getStoredStampData() {
         const stored = localStorage.getItem(STAMP_KEY)
-        return stored ? new Date(stored) : null
+        if (!stored) return null;
+        try {
+            const parsed = JSON.parse(stored);
+            if (parsed && parsed.date) {
+                return { date: new Date(parsed.date), count: parseInt(parsed.count, 10) || 1 };
+            }
+        } catch(e) {
+            return { date: new Date(stored), count: 1 };
+        }
+        return { date: new Date(stored), count: 1 };
     }
 
     function isSameDate(a, b) {
@@ -414,7 +569,7 @@
 
     function renderCalendar() {
         const weekDates = buildWeek(currentWeekStart)
-        const storedStampDate = getStoredStampDate()
+        const stampData = getStoredStampData()
         const start = weekDates[0]
         const end = weekDates[6]
         const monthLabel = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()
@@ -449,12 +604,38 @@
             if (date.getDay() === 0) dateEl.style.color = '#E22B22' // Sunday is red
             cell.appendChild(dateEl)
 
-            if (storedStampDate && isSameDate(date, storedStampDate)) {
-                const stamp = document.createElement('img')
-                stamp.src = 'stamp.png'
-                stamp.className = 'stamp-img'
-                stamp.alt = 'ブラックサンダー'
-                cell.appendChild(stamp)
+            if (stampData && isSameDate(date, stampData.date)) {
+                const stampContainer = document.createElement('div');
+                stampContainer.style.position = 'relative';
+                stampContainer.style.width = '70px';
+                stampContainer.style.height = '70px';
+                stampContainer.style.margin = '5px auto 0 auto';
+
+                // スタンプを必要な数だけ重ねて表示！
+                for (let i = 0; i < stampData.count; i++) {
+                    const stamp = document.createElement('img')
+                    stamp.src = 'stamp.png'
+                    stamp.className = 'stamp-img'
+                    stamp.alt = 'ブラックサンダー'
+                    
+                    if (i > 0) {
+                        stamp.style.position = 'absolute';
+                        stamp.style.top = `${i * 10}px`;
+                        // 左右に少しジグザグにずらす
+                        stamp.style.left = `${(i % 2 === 1 ? -1 : 1) * i * 6}px`; 
+                    } else {
+                        stamp.style.position = 'relative';
+                        stamp.style.top = '0';
+                        stamp.style.left = '0';
+                    }
+                    
+                    stamp.style.zIndex = i + 1;
+                    // アニメーションをずらして連続で押されるようにする
+                    stamp.style.animationDelay = `${i * 0.15}s`; 
+                    
+                    stampContainer.appendChild(stamp);
+                }
+                cell.appendChild(stampContainer)
             }
 
             grid.appendChild(cell)
@@ -462,17 +643,29 @@
     }
 
     function changeWeek(direction) {
+        crunchAudio.currentTime = 0;
+        crunchAudio.play();
         currentWeekStart.setDate(currentWeekStart.getDate() + direction * 7)
         renderCalendar()
     }
 
     function handleOkClick() {
-        const storedStampDate = getStoredStampDate()
-        if (storedStampDate && isSameDate(new Date(), storedStampDate)) {
-            window.location.href = 'nouzeizumi.html'
-        } else {
-            window.location.href = 'gamen.html'
-        }
+        playCrunchSound(); // まず音を鳴らす
+        
+        // 音が鳴る時間を確保するため、少し遅らせて画面遷移する（500ミリ秒）
+        setTimeout(() => {
+            const stampData = getStoredStampData()
+            const totalRequired = parseInt(localStorage.getItem('final_tax_to_pay') || '1', 10);
+            let paidCount = 0;
+            if (stampData && isSameDate(new Date(), stampData.date)) {
+                paidCount = stampData.count;
+            }
+            if (paidCount >= totalRequired) {
+                window.location.href = 'nouzeizumi.html'
+            } else {
+                window.location.href = 'gamen.html'
+            }
+        }, 500);
     }
 
     // 🌟 メインのデータ連結処理
@@ -492,15 +685,16 @@
         if (totalDisplayElement) {
             const taxFloat = parseFloat(totalTax);
             // 💡 【重要ロジック】税額（本）を四捨五入して、お菓子の「個数」に変換する！
-            const displayCount = Math.round(taxFloat); 
-            totalDisplayElement.innerText = `納税は${displayCount}個です`;
-
-            // 🚨 糖分枯渇アラートロジック
-            if (displayCount >= 1) {
-                document.body.classList.add('emergency');
-                const banner = document.getElementById('emergency-banner');
-                if (banner) banner.style.display = 'block';
+            baseTaxCount = Math.round(taxFloat); 
+            
+            // チェックボックスの状態を復元
+            const checkbox = document.getElementById('bug-report');
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (localStorage.getItem('bug_encountered_today') === todayStr) {
+                checkbox.checked = true;
             }
+            
+            toggleBugTax(true); // 初期状態を反映（音は鳴らさない）
         }
 
         

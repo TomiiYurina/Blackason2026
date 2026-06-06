@@ -5,6 +5,18 @@ import * as knnClassifier from '@tensorflow-models/knn-classifier'
 import * as tf from '@tensorflow/tfjs'
 
 function App() {
+  const getTodayPaidCount = () => {
+    const stampRaw = localStorage.getItem('blackthunderTaxStampDate')
+    if (!stampRaw) return 0;
+    try {
+      const stamp = JSON.parse(stampRaw)
+      if (stamp.date.split('T')[0] === new Date().toISOString().split('T')[0]) {
+        return stamp.count || 0;
+      }
+    } catch(e) {}
+    return 0;
+  }
+
   const [supported, setSupported] = useState(false)
   const [cameraOn, setCameraOn] = useState(false)
   const [captured, setCaptured] = useState(false)
@@ -13,6 +25,20 @@ function App() {
   const [modelStatus, setModelStatus] = useState('未読み込み')
   const [loadingModel, setLoadingModel] = useState(false)
   const [batchActive, setBatchActive] = useState(false)
+  const [isCameraActive, setIsCameraActive] = useState(false)
+  const [totalRequired] = useState(parseInt(localStorage.getItem('final_tax_to_pay') || '1', 10))
+  const [paidCount, setPaidCount] = useState(getTodayPaidCount())
+  
+  // ザクザク音の再生関数を追加
+  const playCrunchSound = () => {
+    try {
+      const audio = new Audio('../3939.mp3')
+      audio.volume = 1.0
+      audio.play()
+    } catch (e) {
+      console.error(e)
+    }
+  }
   const [batchProgress, setBatchProgress] = useState(0)
   const [batchTarget, setBatchTarget] = useState(5)
   const [result, setResult] = useState('まだ判定されていません。')
@@ -45,7 +71,6 @@ const loadModel = async () => {
     }
 
     setLoadingModel(true)
-    setModelStatus('読み込み中')
     setMessage('モデルを読み込んでいます...')
     setError('')
 
@@ -128,6 +153,7 @@ const loadModel = async () => {
 
 
   const stopCamera = () => {
+    playCrunchSound()
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop())
       streamRef.current = null
@@ -139,6 +165,7 @@ const loadModel = async () => {
   }
 
   const startCamera = async () => {
+    playCrunchSound()
     setError('')
     setMessage('カメラを起動しています…')
     setResult('まだ判定されていません。')
@@ -192,10 +219,14 @@ const loadModel = async () => {
 
   const handleOverlayVideoEnded = () => {
     setShowFullScreenVideo(false)
-    // 開発中のテストのため一時的にスタンプ記録を無効化
-    // const todayISO = new Date().toISOString()
-    // localStorage.setItem(TAX_STAMP_DATE_KEY, todayISO)
-    window.location.href = '../hyo.html'
+    // スタンプ記録を保存（個数も一緒に）
+    const todayISO = new Date().toISOString()
+    const newPaidCount = paidCount + 1
+    localStorage.setItem(TAX_STAMP_DATE_KEY, JSON.stringify({ date: todayISO, count: newPaidCount }))
+    setPaidCount(newPaidCount)
+    
+    // 1個判定したら、まずは完了画面へ遷移してカレンダーに戻らせる
+    window.location.href = '../nouzeizumi.html'
   }
 
   const addSample = async (label) => {
@@ -357,6 +388,7 @@ const loadModel = async () => {
   }
 
   const runBagDetection = async () => {
+    playCrunchSound()
     // まず Teachable Machine モデルで予測を試す（あれば）
     if (tmModelRef.current && canvasRef.current) {
       try {
@@ -405,25 +437,30 @@ const loadModel = async () => {
       <section className="hero-card">
         <h1>ブラックサンダー袋判定</h1>
         <p>Webカメラで袋を写して、学習した画像モデルで判定します。</p>
+        
+        <div className="quota-display" style={{ background: '#31160a', color: '#FDE11D', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontWeight: 'bold', fontSize: '18px', textAlign: 'center' }}>
+           本日のノルマ: {totalRequired}個中 {paidCount}個 納税済み
+           {paidCount < totalRequired ? `（残り ${totalRequired - paidCount}個）` : '（完納！）'}
+        </div>
 
         {!supported ? (
           <div className="message warning">このブラウザではカメラ入力が使えません。</div>
         ) : (
           <div className="controls camera-controls">
             <div className="button-row">
-              <button type="button" className="primary" onClick={startCamera} disabled={cameraOn}>
+              <button type="button" className="primary" onClick={() => { playCrunchSound(); startCamera(); }} disabled={cameraOn}>
                 カメラ開始
               </button>
-              <button type="button" className="secondary" onClick={stopCamera} disabled={!cameraOn}>
+              <button type="button" className="secondary" onClick={() => { playCrunchSound(); stopCamera(); }} disabled={!cameraOn}>
                 カメラ停止
               </button>
             </div>
 
                   <div className="training-row">
-              <button type="button" className="primary" onClick={captureFrame} disabled={!cameraOn || batchActive}>
+              <button type="button" className="primary" onClick={() => { playCrunchSound(); captureFrame(); }} disabled={!cameraOn || batchActive}>
                 キャプチャして判定
               </button>
-              <button type="button" className="secondary" onClick={async () => { setError(''); await loadModel(); await loadTMModel(); }} disabled={loadingModel || batchActive}>
+              <button type="button" className="secondary" onClick={async () => { playCrunchSound(); setError(''); await loadModel(); await loadTMModel(); }} disabled={loadingModel || batchActive}>
                 モデル再読み込み
               </button>
             </div>
@@ -457,7 +494,7 @@ const loadModel = async () => {
                 preload="auto"
                 onEnded={handleOverlayVideoEnded}
               />
-              <button type="button" className="close-overlay" onClick={hideFullScreenVideo}>
+              <button type="button" className="close-overlay" onClick={() => { playCrunchSound(); hideFullScreenVideo(); }}>
                 閉じる
               </button>
             </div>
