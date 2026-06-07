@@ -12,8 +12,10 @@ def get_today_grass_count(username: str) -> int:
     """
     url = f"https://api.github.com/users/{username}/events/public"
     
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    yesterday_str = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    # 🌟 【超重要】Render（海外）の時刻に9時間を足して、日本の「今日」に強制的に合わせる！
+    jst_now = datetime.now() + timedelta(hours=9)
+    today_str = jst_now.strftime("%Y-%m-%d")
+    yesterday_str = (jst_now - timedelta(days=1)).strftime("%Y-%m-%d")
     
     # 🌟 Renderに設定した GITHUB_TOKEN を読み込んで、GitHub APIに通行手形として渡す
     headers = {}
@@ -45,15 +47,16 @@ def get_today_grass_count(username: str) -> int:
         for event in events:
             if event.get("type") == "PushEvent":
                 created_at = event.get("created_at", "")
+                # 🌟 日本時間の日付（today_str / yesterday_str）で正しく判定されます！
                 if today_str in created_at or yesterday_str in created_at:
                     payload = event.get("payload", {})
                     commits = payload.get("commits", [])
                     commit_count += len(commits)
         
-        # 最低保証ルート
+        # 最低保証ルート（もし今日プッシュがなくても、直近のアクションがあればそれを草の数にする）
         if commit_count == 0:
             action_count = len(events)
-            return action_count if action_count > 0 else 4
+            return action_count if action_count > 0 else 5  # 完全に0ならデモ用に5個を返す！
                     
         return commit_count
         
@@ -73,9 +76,11 @@ def calculate_tax_auto(username: str):
         )
         
     breakdown = {}
-    now = datetime.now()
-    current_weekday = now.weekday()  
-    current_hour = now.hour
+    
+    # 🌟 ここも日本時間ベースで税金を計算するように修正！
+    jst_now = datetime.now() + timedelta(hours=9)
+    current_weekday = jst_now.weekday()  
+    current_hour = jst_now.hour
     
     # ① 量産型コミット税
     grass_tax_value = round(0.1 * today_grass, 1)
