@@ -32,7 +32,7 @@ function App() {
   // ザクザク音の再生関数を追加
   const playCrunchSound = () => {
     try {
-      const audio = new Audio('../3939.mp3')
+      const audio = new Audio('../moguasmr.mov')
       audio.volume = 1.0
       audio.play()
     } catch (e) {
