@@ -127,7 +127,7 @@
         
         try {
             // 🌟 1. あなたが作ったFastAPI（誰の名前でも受け取れる部屋）に通信する！
-            const apiUrl = `http://127.0.0.1:8000/api/tax/calculate-auto/${githubId}`;
+            const apiUrl = `https://blackason2026.onrender.com/api/tax/calculate-auto/${githubId}`;
             const response = await fetch(apiUrl);
             
             // 🚨【今回の重要修正！】もしバックエンドからエラー（404など）が返ってきた場合
