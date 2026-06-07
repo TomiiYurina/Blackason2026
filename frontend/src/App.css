@@ -191,6 +191,38 @@
   padding: 24px;
   background-color: #F4EBD0;
   color: #3D1C04;
+  position: relative;
+}
+
+.side-logos {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  position: fixed;
+  top: 20px;
+  bottom: 20px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.side-logos img {
+  width: 150px;
+  height: auto;
+  filter: drop-shadow(4px 4px 0px #FFF);
+}
+
+.left-logos {
+  left: 30px;
+}
+
+.right-logos {
+  right: 30px;
+}
+
+@media (max-width: 1200px) {
+  .side-logos {
+    display: none;
+  }
 }
 
 .hero-card {
