@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime, timedelta
 import requests
+import os  # 🌟 環境変数を読み込むために追加
 
 router = APIRouter(prefix="/api/tax", tags=["TaxCalculation"])
 
@@ -9,14 +10,20 @@ def get_today_grass_count(username: str) -> int:
     🌿 GitHubパブリックAPIから、本日のコミット数を取得する関数。
     🔒 大文字・小文字まで完璧に一致しているか厳密にチェックします。
     """
-    # 💡 GitHubは小文字で叩いてもデータを返してくれますが、返ってきたデータの中に「正式なID」が入っています
     url = f"https://api.github.com/users/{username}/events/public"
     
     today_str = datetime.now().strftime("%Y-%m-%d")
     yesterday_str = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
     
+    # 🌟 Renderに設定した GITHUB_TOKEN を読み込んで、GitHub APIに通行手形として渡す
+    headers = {}
+    token = os.getenv("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"token {token}"
+    
     try:
-        response = requests.get(url, timeout=5)
+        # 🌟 headers を一緒に送ることで、回数制限（レートリミット）を回避します！
+        response = requests.get(url, headers=headers, timeout=5)
         
         # 🚨 スペルが全然違う場合は、ここで404エラー（存在しない）になる
         if response.status_code == 404:
@@ -27,15 +34,11 @@ def get_today_grass_count(username: str) -> int:
             
         events = response.json()
         
-        # 🔒【今回の最重要キモ！】大文字・小文字の完全一致チェック
-        # GitHubのイベントデータがある場合、その中の最初のイベントから「正式なユーザーID（login）」を抜き出します
+        # 🔒 大文字・小文字の完全一致チェック
         if len(events) > 0:
-            # GitHubが認識している正式な大文字小文字のID（例: TomiiYurina）
             official_name = events[0].get("actor", {}).get("login", "")
             
-            # 富井さんが画面から入力したID（username）と、大文字小文字も含めて完全に一致するか比較
             if username != official_name:
-                # 1文字でも大文字小文字が違ったら、ユーザーが見つからない扱い（-1）にして弾く！
                 return -1
         
         commit_count = 0
