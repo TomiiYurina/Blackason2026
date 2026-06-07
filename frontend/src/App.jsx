@@ -455,6 +455,18 @@ const loadModel = async () => {
 
   return (
     <main className="app-shell">
+      {/* 左右のロゴ装飾 */}
+      <div className="side-logos left-logos">
+        <img src="../2logo.png" alt="" />
+        <img src="../2logo.png" alt="" />
+        <img src="../2logo.png" alt="" />
+      </div>
+      <div className="side-logos right-logos">
+        <img src="../2logo.png" alt="" />
+        <img src="../2logo.png" alt="" />
+        <img src="../2logo.png" alt="" />
+      </div>
+
       <section className="hero-card">
         <h1>ブラックサンダー袋判定</h1>
         <p>Webカメラで袋を写して、学習した画像モデルで判定します。</p>
