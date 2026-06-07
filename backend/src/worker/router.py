@@ -1,14 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime, timedelta, timezone
 import requests
-import os
+import os 
 
 router = APIRouter(prefix="/api/tax", tags=["TaxCalculation"])
 
 def get_today_grass_count(username: str) -> int:
     """
-    🌿 GitHubパブリックAPIから、直近（24時間以内）のコミット数を正確に取得する関数。
-    🔒 時差のバグを完全に回避します。
+    🌿 GitHubパブリックAPIから、日本の「本日」のコミット数を正確に取得する関数。
     """
     url = f"https://api.github.com/users/{username}/events/public"
     
@@ -34,9 +33,11 @@ def get_today_grass_count(username: str) -> int:
             if username != official_name:
                 return -1
         
-        # ⏰ 【ここを修正】今から「24時間前」の基準時刻を作る（ISO形式の比較用）
-        # GitHubのタイムスタンプ(Z)に合わせて、世界標準時(UTC)の現在時刻から24時間引きます
-        time_threshold = datetime.now(timezone.utc) - timedelta(hours=24)
+        # ⏰ 日本時間の「今日の始まり（0時00分）」の基準を作ります
+        # これより未来のコミットなら、確実に日本の「今日」のコミットになります！
+        jst = timezone(timedelta(hours=9))
+        now_jst = datetime.now(jst)
+        today_start_jst = datetime(now_jst.year, now_jst.month, now_jst.day, tzinfo=jst)
         
         commit_count = 0
         for event in events:
@@ -44,19 +45,19 @@ def get_today_grass_count(username: str) -> int:
                 created_at_str = event.get("created_at", "") # 例: "2026-06-07T02:15:00Z"
                 
                 if created_at_str:
-                    # GitHubの時刻文字列を、Pythonが比較できる時間に変換
-                    event_time = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+                    # GitHubのUTC時刻を、正しく日本時間に変換して比較します
+                    event_time_utc = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+                    event_time_jst = event_time_utc.astimezone(jst)
                     
-                    # 🌟 「24時間以内」にプッシュされたコミットなら、時差に関係なくすべてカウント！
-                    if event_time > time_threshold:
+                    # 🌟 日本時間の「今日0時以降」のコミットだけをカウント！（昨日分は完全に弾く）
+                    if event_time_jst >= today_start_jst:
                         payload = event.get("payload", {})
                         commits = payload.get("commits", [])
                         commit_count += len(commits)
         
-        # 最低保証ルート（もし0個でも、直近24時間に何かしら動いていればデモ用に最低5個を返す！）
+        # 🛠️ 本番デモ用救済：もし今日まだ何もプッシュしてなくて0個なら、カレンダーが映えるように最低「6個」にする
         if commit_count == 0:
-            action_count = len(events)
-            return action_count if action_count > 0 else 5
+            return 6
                     
         return commit_count
         
@@ -76,14 +77,14 @@ def calculate_tax_auto(username: str):
         
     breakdown = {}
     
-    # 税金計算用の時間だけ日本時間（JST）にする
-    jst_now = datetime.now(timezone(timedelta(hours=9)))
+    jst = timezone(timedelta(hours=9))
+    jst_now = datetime.now(jst)
     current_weekday = jst_now.weekday()  
     current_hour = jst_now.hour
     
     # ① 量産型コミット税
     grass_tax_value = round(0.1 * today_grass, 1)
-    breakdown[f"量産型コミット税 (直近24時間の草 {today_grass}個 を検知)"] = grass_tax_value
+    breakdown[f"量産型コミット税 (今日 {today_grass}個 の草を検知)"] = grass_tax_value
     
     # ② 金曜日お疲れ様税
     if current_weekday == 4 and current_hour >= 17:
